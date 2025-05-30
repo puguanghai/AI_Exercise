@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - 智能健身指导系统{% endblock %}
+
+{% block body_class %}home-page{% endblock %}
+
+{% block content %}
+<!-- 英雄区域 -->
+<section class="hero-section">
+    <div class="hero-background"></div>
+    <div class="hero-overlay"></div>
+    <div class="container">
+        <div class="row align-items-center min-vh-100">
+            <div class="col-lg-6">
+                <div class="hero-content">
+                    <h1 class="display-4 fw-bold text-white mb-4">
+                        智能健身指导系统
+                    </h1>
+                    <p class="lead text-white mb-4">
+                        结合AI视觉技术与专业健身指导，为您提供个性化的实时健身体验。
+                        无需专业设备，通过摄像头即可获得准确的动作分析和指导。
+                    </p>
+                    <div class="hero-buttons">
+                        {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('workout') }}" class="btn btn-primary btn-lg me-3">
+                            <i class="fas fa-play me-2"></i>开始训练
+                        </a>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-chart-line me-2"></i>查看数据
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3">
+                            <i class="fas fa-user-plus me-2"></i>立即注册
+                        </a>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>登录
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-visual">
+                    <div class="fitness-illustration">
+                        <div class="fitness-icon-grid">
+                            <div class="fitness-icon-item">
+                                <i class="fas fa-dumbbell"></i>
+                            </div>
+                            <div class="fitness-icon-item">
+                                <i class="fas fa-running"></i>
+                            </div>
+                            <div class="fitness-icon-item">
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                            <div class="fitness-icon-item">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <div class="fitness-icon-item">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="fitness-icon-item">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                        </div>
+                        <div class="central-element">
+                            <div class="pulse-circle"></div>
+                            <div class="main-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 功能特色 -->
+<section class="features-section py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold">核心功能</h2>
+                <p class="lead text-muted">专业的AI技术为您的健身之路保驾护航</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h4>实时动作识别</h4>
+                    <p>利用先进的计算机视觉技术，实时分析您的健身动作，确保每个动作都标准到位。</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-cog"></i>
+                    </div>
+                    <h4>个性化计划</h4>
+                    <p>根据您的身体数据和健身目标，AI为您量身定制专属的健身计划和训练方案。</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h4>数据跟踪分析</h4>
+                    <p>实时记录运动数据，智能分析训练效果，帮助您持续优化健身计划。</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h4>AI智能助手</h4>
+                    <p>24小时在线的AI健身顾问，随时为您解答健身疑问，提供专业建议。</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-dumbbell"></i>
+                    </div>
+                    <h4>多样化运动</h4>
+                    <p>支持俯卧撑、深蹲、仰卧起坐等多种健身动作，满足不同训练需求。</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h4>便捷易用</h4>
+                    <p>无需下载APP，通过网页即可使用，支持多设备访问，随时随地开始健身。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 支持的运动类型 -->
+<section class="exercises-section py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold">支持的运动类型</h2>
+                <p class="lead text-muted">专业的动作识别，覆盖常见健身动作</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="exercise-card">
+                    <div class="exercise-image" alt="俯卧撑"></div>
+                    <div class="exercise-info">
+                        <h5>俯卧撑</h5>
+                        <p>锻炼胸肌、三头肌和核心肌群</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="exercise-card">
+                    <div class="exercise-image" alt="深蹲"></div>
+                    <div class="exercise-info">
+                        <h5>深蹲</h5>
+                        <p>强化腿部肌肉和臀部力量</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="exercise-card">
+                    <div class="exercise-image" alt="仰卧起坐"></div>
+                    <div class="exercise-info">
+                        <h5>仰卧起坐</h5>
+                        <p>增强腹部核心肌群力量</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="exercise-card">
+                    <div class="exercise-image" alt="平板支撑"></div>
+                    <div class="exercise-info">
+                        <h5>平板支撑</h5>
+                        <p>全面锻炼核心稳定性</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="exercise-card">
+                    <div class="exercise-image" alt="开合跳"></div>
+                    <div class="exercise-info">
+                        <h5>开合跳</h5>
+                        <p>全身有氧运动，提高心肺功能</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="exercise-card">
+                    <div class="exercise-image" alt="弓步蹲"></div>
+                    <div class="exercise-info">
+                        <h5>弓步蹲</h5>
+                        <p>锻炼腿部肌肉和平衡能力</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="exercise-card">
+                    <div class="exercise-image" alt="波比跳"></div>
+                    <div class="exercise-info">
+                        <h5>波比跳</h5>
+                        <p>高强度全身训练动作</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="exercise-card">
+                    <div class="exercise-image" alt="引体向上"></div>
+                    <div class="exercise-info">
+                        <h5>引体向上</h5>
+                        <p>锻炼背部和手臂肌肉</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 统计数据 -->
+<section class="stats-section py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-item">
+                    <div class="stat-number">10,000+</div>
+                    <div class="stat-label">注册用户</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-item">
+                    <div class="stat-number">50,000+</div>
+                    <div class="stat-label">训练次数</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-item">
+                    <div class="stat-number">95%</div>
+                    <div class="stat-label">动作识别准确率</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-item">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">AI助手在线</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 行动号召 -->
+<section class="cta-section py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="display-5 fw-bold mb-4">开始您的智能健身之旅</h2>
+                <p class="lead mb-4">加入我们，体验AI驱动的个性化健身指导</p>
+                {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-rocket me-2"></i>立即开始
+                </a>
+                {% else %}
+                <a href="{{ url_for('workout') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-play me-2"></i>开始训练
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

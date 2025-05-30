@@ -1,0 +1,69 @@
+# 智能健身指导系统 - 依赖包列表
+# AI Fitness Guidance System - Requirements
+
+# Flask核心框架
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+Flask-Login==0.6.3
+Werkzeug==2.3.7
+
+# 表单处理
+Flask-WTF==1.1.1
+WTForms==3.0.1
+
+# 跨域支持
+Flask-CORS==4.0.0
+
+# 计算机视觉和AI
+opencv-python==4.8.1.78
+mediapipe==0.10.7
+numpy==1.24.3
+
+# HTTP请求
+requests==2.31.0
+
+# 图像处理
+Pillow==10.0.1
+
+# 时间处理
+pytz==2023.3
+
+# 环境变量管理
+python-dotenv==1.0.0
+
+# 数据处理和可视化
+pandas==2.0.3
+plotly==5.17.0
+matplotlib==3.7.2
+seaborn==0.12.2
+
+# 科学计算
+scipy==1.11.4
+
+# 机器学习
+scikit-learn==1.3.2
+tensorflow==2.13.0
+joblib==1.3.2
+
+# 开发和测试工具（可选）
+pytest==7.4.3
+pytest-flask==1.3.0
+
+# 生产环境工具（可选）
+gunicorn==21.2.0
+redis==5.0.1
+
+# 邮件支持（可选）
+Flask-Mail==0.9.1
+
+# 缓存支持（可选）
+Flask-Caching==2.1.0
+
+# 日志和监控（可选）
+sentry-sdk[flask]==1.38.0
+
+# 安全工具（可选）
+Flask-Talisman==1.1.0
+
+# 数据库迁移（可选）
+Flask-Migrate==4.0.5

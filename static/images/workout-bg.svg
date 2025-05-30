@@ -1,0 +1,71 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="workoutGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#4ecdc4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#45b7d1;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="energyGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- 背景渐变 -->
+  <rect width="100%" height="100%" fill="url(#workoutGradient)"/>
+  
+  <!-- 动态能量圈 -->
+  <circle cx="300" cy="300" r="50" fill="url(#energyGradient)">
+    <animate attributeName="r" values="50;100;50" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.8;0.2;0.8" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  
+  <circle cx="1500" cy="200" r="80" fill="url(#energyGradient)">
+    <animate attributeName="r" values="80;150;80" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;0.1;0.6" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  
+  <circle cx="1200" cy="700" r="60" fill="url(#energyGradient)">
+    <animate attributeName="r" values="60;120;60" dur="5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.7;0.15;0.7" dur="5s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- 运动轨迹线条 -->
+  <path d="M100,500 Q500,300 900,500 T1700,500" stroke="rgba(255,255,255,0.1)" stroke-width="3" fill="none">
+    <animate attributeName="stroke-dasharray" values="0,1000;1000,0;0,1000" dur="6s" repeatCount="indefinite"/>
+  </path>
+  
+  <path d="M200,600 Q600,400 1000,600 T1800,600" stroke="rgba(255,255,255,0.08)" stroke-width="2" fill="none">
+    <animate attributeName="stroke-dasharray" values="0,1200;1200,0;0,1200" dur="8s" repeatCount="indefinite"/>
+  </path>
+  
+  <!-- 健身器材图标 -->
+  <g transform="translate(150, 800)" opacity="0.15">
+    <!-- 杠铃 -->
+    <rect x="0" y="18" width="120" height="4" fill="white"/>
+    <rect x="-10" y="10" width="20" height="20" fill="white"/>
+    <rect x="110" y="10" width="20" height="20" fill="white"/>
+    <animateTransform attributeName="transform" type="translate" values="150,800; 170,790; 150,800" dur="3s" repeatCount="indefinite"/>
+  </g>
+  
+  <g transform="translate(1600, 850)" opacity="0.15">
+    <!-- 跳绳 -->
+    <path d="M0,0 Q20,-20 40,0 Q60,20 80,0 Q100,-20 120,0" stroke="white" stroke-width="3" fill="none"/>
+    <circle cx="0" cy="0" r="3" fill="white"/>
+    <circle cx="120" cy="0" r="3" fill="white"/>
+    <animateTransform attributeName="transform" type="rotate" values="0 60 0; 360 60 0" dur="2s" repeatCount="indefinite"/>
+  </g>
+  
+  <!-- 动态粒子效果 -->
+  <g opacity="0.3">
+    <circle cx="400" cy="150" r="2" fill="white">
+      <animateTransform attributeName="transform" type="translate" values="0,0; 50,100; 100,0; 150,100; 200,0" dur="10s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="800" cy="250" r="1.5" fill="white">
+      <animateTransform attributeName="transform" type="translate" values="0,0; -30,80; -60,0; -90,80; -120,0" dur="12s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="1300" cy="400" r="2.5" fill="white">
+      <animateTransform attributeName="transform" type="translate" values="0,0; 40,-60; 80,0; 120,-60; 160,0" dur="8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

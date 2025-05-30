@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}智能健身指导系统{% endblock %}</title>
+    <link href="{{ url_for('static', filename='css/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-dumbbell me-2"></i>智能健身指导系统
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">首页</a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">仪表板</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('workout') }}">开始训练</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('profile') }}">个人资料</a>
+                    </li>
+                    {% if current_user.is_admin %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin') }}">管理面板</a>
+                    </li>
+                    {% endif %}
+                    {% endif %}
+                </ul>
+                
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i>{{ current_user.username }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('profile') }}">个人资料</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">退出登录</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login') }}">登录</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('register') }}">注册</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main class="main-content">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="container mt-3">
+                    {% for message in messages %}
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>智能健身指导系统</h5>
+                    <p>基于AI技术的实时健身指导平台</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2025 智能健身指导系统. 保留所有权利.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AI助手聊天窗口 -->
+    {% if current_user.is_authenticated %}
+    <div class="chat-widget" id="chatWidget">
+        <div class="chat-header" id="chatHeader">
+            <div class="chat-title">
+                <i class="fas fa-robot me-2"></i>
+                <span>AI健身助手</span>
+            </div>
+            <div class="chat-controls">
+                <button class="chat-control-btn" onclick="toggleFullscreen()" title="全屏/窗口模式">
+                    <i class="fas fa-expand" id="fullscreenIcon"></i>
+                </button>
+                <button class="chat-control-btn" onclick="toggleChat()" title="最小化/展开">
+                    <i class="fas fa-chevron-up" id="chatToggle"></i>
+                </button>
+                <button class="chat-control-btn" onclick="closeChat()" title="关闭">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    <i class="fas fa-robot"></i>
+                    <div class="message-content">
+                        <div class="message-text">您好！我是您的AI健身助手，有什么健身问题可以问我哦！</div>
+                        <small class="message-time">刚刚</small>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input">
+                <div class="input-group">
+                    <select class="form-select" id="aiModel" style="max-width: 120px;">
+                        <option value="deepseek">DeepSeek</option>
+                        <option value="gemini">Gemini</option>
+                        <option value="deepseek_v3">DeepSeek V3</option>
+                    </select>
+                    <input type="text" class="form-control" id="chatInput" placeholder="输入您的问题..." onkeypress="handleChatKeyPress(event)">
+                    <button class="btn btn-primary" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="chat-resize-handle" id="resizeHandle"></div>
+    </div>
+
+    <!-- AI助手切换按钮 -->
+    <button class="ai-chat-toggle" id="aiChatToggle" onclick="showChat()" style="display: none;">
+        <i class="fas fa-robot"></i>
+    </button>
+    {% endif %}
+
+    <!-- 流动光效 -->
+    <div class="flowing-light"></div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/bootstrap/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <!-- AI聊天功能 -->
+    <script>
+        let chatOpen = true;
+        let isFullscreen = false;
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        let isResizing = false;
+
+        // 初始化拖动功能
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChatDrag();
+            initializeChatResize();
+        });
+
+        function initializeChatDrag() {
+            const chatWidget = document.getElementById('chatWidget');
+            const chatHeader = document.getElementById('chatHeader');
+
+            if (!chatHeader || !chatWidget) return;
+
+            chatHeader.addEventListener('mousedown', startDrag);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+
+            // 触摸事件支持
+            chatHeader.addEventListener('touchstart', startDragTouch);
+            document.addEventListener('touchmove', dragTouch);
+            document.addEventListener('touchend', stopDrag);
+        }
+
+        function startDrag(e) {
+            if (isFullscreen || e.target.closest('.chat-control-btn')) return;
+
+            isDragging = true;
+            const chatWidget = document.getElementById('chatWidget');
+            const rect = chatWidget.getBoundingClientRect();
+
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+
+            chatWidget.style.transition = 'none';
+            document.body.style.userSelect = 'none';
+        }
+
+        function startDragTouch(e) {
+            if (isFullscreen || e.target.closest('.chat-control-btn')) return;
+
+            const touch = e.touches[0];
+            startDrag({ clientX: touch.clientX, clientY: touch.clientY });
+        }
+
+        function drag(e) {
+            if (!isDragging || isFullscreen) return;
+
+            e.preventDefault();
+            const chatWidget = document.getElementById('chatWidget');
+
+            let newX = e.clientX - dragOffset.x;
+            let newY = e.clientY - dragOffset.y;
+
+            // 边界检查
+            const maxX = window.innerWidth - chatWidget.offsetWidth;
+            const maxY = window.innerHeight - chatWidget.offsetHeight;
+
+            newX = Math.max(0, Math.min(newX, maxX));
+            newY = Math.max(0, Math.min(newY, maxY));
+
+            chatWidget.style.left = newX + 'px';
+            chatWidget.style.top = newY + 'px';
+            chatWidget.style.right = 'auto';
+            chatWidget.style.bottom = 'auto';
+        }
+
+        function dragTouch(e) {
+            if (!isDragging) return;
+            const touch = e.touches[0];
+            drag({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
+        }
+
+        function stopDrag() {
+            if (!isDragging) return;
+
+            isDragging = false;
+            const chatWidget = document.getElementById('chatWidget');
+            chatWidget.style.transition = '';
+            document.body.style.userSelect = '';
+        }
+
+        function toggleChat() {
+            const chatBody = document.getElementById('chatBody');
+            const chatToggle = document.getElementById('chatToggle');
+
+            if (chatOpen) {
+                chatBody.style.display = 'none';
+                chatToggle.className = 'fas fa-chevron-down';
+                chatOpen = false;
+            } else {
+                chatBody.style.display = 'flex';
+                chatToggle.className = 'fas fa-chevron-up';
+                chatOpen = true;
+                setTimeout(() => {
+                    document.getElementById('chatInput').focus();
+                }, 100);
+            }
+        }
+
+        function toggleFullscreen() {
+            const chatWidget = document.getElementById('chatWidget');
+            const fullscreenIcon = document.getElementById('fullscreenIcon');
+
+            if (isFullscreen) {
+                // 退出全屏
+                chatWidget.classList.remove('chat-fullscreen');
+                fullscreenIcon.className = 'fas fa-expand';
+                isFullscreen = false;
+
+                // 恢复原始位置
+                chatWidget.style.left = '';
+                chatWidget.style.top = '';
+                chatWidget.style.right = '20px';
+                chatWidget.style.bottom = '20px';
+            } else {
+                // 进入全屏
+                chatWidget.classList.add('chat-fullscreen');
+                fullscreenIcon.className = 'fas fa-compress';
+                isFullscreen = true;
+
+                // 全屏位置
+                chatWidget.style.left = '0';
+                chatWidget.style.top = '0';
+                chatWidget.style.right = '0';
+                chatWidget.style.bottom = '0';
+            }
+        }
+
+        function closeChat() {
+            const chatWidget = document.getElementById('chatWidget');
+            const aiChatToggle = document.getElementById('aiChatToggle');
+
+            chatWidget.style.display = 'none';
+            aiChatToggle.style.display = 'block';
+        }
+
+        function showChat() {
+            const chatWidget = document.getElementById('chatWidget');
+            const aiChatToggle = document.getElementById('aiChatToggle');
+
+            chatWidget.style.display = 'flex';
+            aiChatToggle.style.display = 'none';
+
+            if (!chatOpen) {
+                toggleChat();
+            }
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function initializeChatResize() {
+            const resizeHandle = document.getElementById('resizeHandle');
+            const chatWidget = document.getElementById('chatWidget');
+
+            if (!resizeHandle || !chatWidget) return;
+
+            resizeHandle.addEventListener('mousedown', startResize);
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
+        }
+
+        function startResize(e) {
+            if (isFullscreen) return;
+
+            isResizing = true;
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        }
+
+        function resize(e) {
+            if (!isResizing || isFullscreen) return;
+
+            const chatWidget = document.getElementById('chatWidget');
+            const rect = chatWidget.getBoundingClientRect();
+
+            const newWidth = e.clientX - rect.left;
+            const newHeight = e.clientY - rect.top;
+
+            // 限制最小和最大尺寸
+            const minWidth = 300;
+            const minHeight = 400;
+            const maxWidth = window.innerWidth * 0.9;
+            const maxHeight = window.innerHeight * 0.9;
+
+            if (newWidth >= minWidth && newWidth <= maxWidth) {
+                chatWidget.style.width = newWidth + 'px';
+            }
+
+            if (newHeight >= minHeight && newHeight <= maxHeight) {
+                chatWidget.style.height = newHeight + 'px';
+            }
+        }
+
+        function stopResize() {
+            if (!isResizing) return;
+
+            isResizing = false;
+            document.body.style.userSelect = '';
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const model = document.getElementById('aiModel').value;
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // 添加用户消息
+            addMessage(message, 'user');
+            input.value = '';
+
+            // 显示加载状态
+            showTyping();
+
+            try {
+                const response = await fetch('/ai_chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        model: model
+                    })
+                });
+
+                const data = await response.json();
+
+                hideTyping();
+
+                if (data.success) {
+                    addMessage(data.response, 'bot');
+                } else {
+                    addMessage('抱歉，我现在无法回答您的问题。请稍后再试。', 'bot');
+                }
+            } catch (error) {
+                hideTyping();
+                console.error('AI聊天错误:', error);
+                addMessage('网络连接出现问题，请检查网络后重试。', 'bot');
+            }
+        }
+
+        function addMessage(content, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageClass = sender === 'user' ? 'user-message' : 'bot-message';
+            const time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+            // 处理AI回复的格式化
+            let formattedContent = content;
+            if (sender === 'bot') {
+                // 处理Markdown格式
+                formattedContent = formatAIResponse(content);
+            }
+
+            const messageHtml = `
+                <div class="message ${messageClass}">
+                    <i class="fas fa-${sender === 'user' ? 'user' : 'robot'}"></i>
+                    <div class="message-content">
+                        <div class="message-text">${formattedContent}</div>
+                        <small class="message-time">${time}</small>
+                    </div>
+                </div>
+            `;
+
+            messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function formatAIResponse(content) {
+            // 移除多余的符号和格式化文本
+            let formatted = content
+                // 移除多余的#号
+                .replace(/^#+\s*/gm, '')
+                // 处理粗体文本
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                // 处理斜体文本
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                // 处理列表项
+                .replace(/^[-*+]\s+(.+)$/gm, '• $1')
+                // 处理数字列表
+                .replace(/^\d+\.\s+(.+)$/gm, '• $1')
+                // 处理换行
+                .replace(/\n/g, '<br>')
+                // 移除多余的空行
+                .replace(/(<br>\s*){3,}/g, '<br><br>')
+                // 处理代码块
+                .replace(/```(.*?)```/gs, '<code>$1</code>')
+                // 处理行内代码
+                .replace(/`([^`]+)`/g, '<code>$1</code>');
+
+            return formatted;
+        }
+
+        function showTyping() {
+            const messagesContainer = document.getElementById('chatMessages');
+            const typingHtml = `
+                <div class="message bot-message typing-message">
+                    <i class="fas fa-robot"></i>
+                    <div class="message-content">
+                        <div class="typing-indicator">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            messagesContainer.insertAdjacentHTML('beforeend', typingHtml);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function hideTyping() {
+            const typingMessage = document.querySelector('.typing-message');
+            if (typingMessage) {
+                typingMessage.remove();
+            }
+        }
+
+        // 回车发送消息
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

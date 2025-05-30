@@ -1,0 +1,709 @@
+{% extends "base.html" %}
+
+{% block title %}数据仪表板{% endblock %}
+
+{% block body_class %}dashboard-page{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="container-fluid">
+        <!-- 页面标题 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="page-header">
+                    <h1 class="display-6 fw-bold">
+                        <i class="fas fa-chart-line me-3"></i>训练仪表板
+                    </h1>
+                    <p class="lead text-muted">欢迎回来，{{ user.username }}！查看您的训练进度和数据分析</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 统计卡片 -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-card-body">
+                        <div class="stat-icon bg-primary">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-number" id="totalCalories">0</h3>
+                            <p class="stat-label">总消耗卡路里</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-card-body">
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-number" id="totalDuration">0</h3>
+                            <p class="stat-label">总训练时长(分钟)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-card-body">
+                        <div class="stat-icon bg-warning">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-number" id="totalWorkouts">{{ workouts|length }}</h3>
+                            <p class="stat-label">训练次数</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-card-body">
+                        <div class="stat-icon bg-info">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-number" id="avgAccuracy">0%</h3>
+                            <p class="stat-label">平均准确率</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 图表区域 -->
+        <div class="row mb-4">
+            <div class="col-lg-8 mb-4">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-chart-line me-2"></i>训练趋势
+                        </h5>
+                    </div>
+                    <div class="chart-body">
+                        <div id="workoutTrendChart" style="height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 mb-4">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>运动类型分布
+                        </h5>
+                    </div>
+                    <div class="chart-body">
+                        <div id="exerciseTypeChart" style="height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 最近训练记录 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="table-card">
+                    <div class="table-header">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-history me-2"></i>最近训练记录
+                        </h5>
+                        <a href="{{ url_for('workout') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>开始新训练
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>日期</th>
+                                    <th>运动类型</th>
+                                    <th>时长</th>
+                                    <th>次数</th>
+                                    <th>卡路里</th>
+                                    <th>准确率</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for workout in workouts %}
+                                <tr>
+                                    <td>{{ workout.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <span class="exercise-badge exercise-{{ workout.exercise_type }}">
+                                            {{ workout.exercise_type }}
+                                        </span>
+                                    </td>
+                                    <td>{{ (workout.duration // 60) }}分{{ (workout.duration % 60) }}秒</td>
+                                    <td>{{ workout.reps_completed or '-' }}</td>
+                                    <td>{{ '%.1f'|format(workout.calories_burned or 0) }}</td>
+                                    <td>
+                                        <div class="accuracy-bar">
+                                            {% set accuracy = workout.accuracy_score or 0 %}
+                                            {% if accuracy > 100 %}
+                                                {% set display_accuracy = accuracy / 100 %}
+                                            {% else %}
+                                                {% set display_accuracy = accuracy %}
+                                            {% endif %}
+                                            <div class="accuracy-fill" style="width: {{ display_accuracy }}%"></div>
+                                            <span class="accuracy-text">{{ '%.1f'|format(display_accuracy) }}%</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewWorkoutDetail({{ workout.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="empty-state">
+                                            <i class="fas fa-dumbbell fa-3x text-muted mb-3"></i>
+                                            <h5 class="text-muted">还没有训练记录</h5>
+                                            <p class="text-muted">开始您的第一次训练吧！</p>
+                                            <a href="{{ url_for('workout') }}" class="btn btn-primary">
+                                                <i class="fas fa-play me-2"></i>开始训练
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 个人目标 -->
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="goal-card">
+                    <div class="goal-header">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-target me-2"></i>本周目标
+                        </h5>
+                    </div>
+                    <div class="goal-body">
+                        <div class="goal-item">
+                            <div class="goal-info">
+                                <span class="goal-label">训练次数</span>
+                                <span class="goal-progress" id="weeklyWorkoutProgress">0/5</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-primary" id="weeklyWorkoutProgressBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="goal-item">
+                            <div class="goal-info">
+                                <span class="goal-label">消耗卡路里</span>
+                                <span class="goal-progress" id="weeklyCaloriesProgress">0/1200</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" id="weeklyCaloriesProgressBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="goal-item">
+                            <div class="goal-info">
+                                <span class="goal-label">训练时长</span>
+                                <span class="goal-progress" id="weeklyDurationProgress">0/180分钟</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-warning" id="weeklyDurationProgressBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 mb-4">
+                <div class="achievement-card">
+                    <div class="achievement-header">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-medal me-2"></i>成就徽章
+                        </h5>
+                    </div>
+                    <div class="achievement-body">
+                        <div class="achievement-grid">
+                            <div class="achievement-item earned">
+                                <i class="fas fa-fire"></i>
+                                <span>燃烧者</span>
+                            </div>
+                            <div class="achievement-item earned">
+                                <i class="fas fa-clock"></i>
+                                <span>坚持者</span>
+                            </div>
+                            <div class="achievement-item">
+                                <i class="fas fa-trophy"></i>
+                                <span>冠军</span>
+                            </div>
+                            <div class="achievement-item">
+                                <i class="fas fa-star"></i>
+                                <span>完美者</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 页面加载时获取数据
+document.addEventListener('DOMContentLoaded', function() {
+    loadWorkoutData();
+});
+
+// 加载训练数据
+async function loadWorkoutData() {
+    try {
+        // 获取用户完整数据
+        const response = await fetch('/api/user_data');
+        const result = await response.json();
+
+        if (result.success) {
+            updateStatistics(result.statistics);
+            createWorkoutTrendChart(result.workouts);
+            createExerciseTypeChart(result.workouts);
+            updateGoalsProgress(result.statistics);
+        } else {
+            console.error('获取数据失败:', result.message);
+            showMessage('数据加载失败，请刷新页面重试', 'error');
+        }
+    } catch (error) {
+        console.error('加载数据失败:', error);
+        showMessage('网络错误，请检查网络连接', 'error');
+    }
+}
+
+// 更新统计数据
+function updateStatistics(statistics) {
+    // 更新统计卡片
+    document.getElementById('totalCalories').textContent = statistics.total_calories || 0;
+    document.getElementById('totalDuration').textContent = Math.round((statistics.total_time || 0) / 60);
+    document.getElementById('totalWorkouts').textContent = statistics.total_workouts || 0;
+
+    // 修复准确率显示问题
+    let avgAccuracy = statistics.avg_accuracy || 0;
+    if (avgAccuracy > 100) {
+        avgAccuracy = avgAccuracy / 100;
+    }
+    avgAccuracy = Math.max(0, Math.min(100, avgAccuracy));
+    document.getElementById('avgAccuracy').textContent = avgAccuracy.toFixed(1) + '%';
+}
+
+// 更新目标进度
+function updateGoalsProgress(statistics) {
+    // 更新训练次数进度
+    const workoutProgress = Math.min(100, (statistics.weekly_workouts / statistics.weekly_goal) * 100);
+    const workoutProgressElement = document.getElementById('weeklyWorkoutProgress');
+    const workoutProgressBar = document.getElementById('weeklyWorkoutProgressBar');
+    if (workoutProgressElement && workoutProgressBar) {
+        workoutProgressElement.textContent = `${statistics.weekly_workouts}/${statistics.weekly_goal}`;
+        workoutProgressBar.style.width = workoutProgress + '%';
+    }
+
+    // 更新卡路里进度
+    const caloriesProgress = Math.min(100, (statistics.weekly_calories / statistics.weekly_calories_goal) * 100);
+    const caloriesProgressElement = document.getElementById('weeklyCaloriesProgress');
+    const caloriesProgressBar = document.getElementById('weeklyCaloriesProgressBar');
+    if (caloriesProgressElement && caloriesProgressBar) {
+        caloriesProgressElement.textContent = `${statistics.weekly_calories}/${statistics.weekly_calories_goal}`;
+        caloriesProgressBar.style.width = caloriesProgress + '%';
+    }
+
+    // 更新训练时长进度（转换为分钟显示）
+    const weeklyDurationMinutes = Math.round(statistics.weekly_duration / 60);
+    const weeklyDurationGoalMinutes = Math.round(statistics.weekly_duration_goal / 60);
+    const durationProgress = Math.min(100, (statistics.weekly_duration / statistics.weekly_duration_goal) * 100);
+    const durationProgressElement = document.getElementById('weeklyDurationProgress');
+    const durationProgressBar = document.getElementById('weeklyDurationProgressBar');
+    if (durationProgressElement && durationProgressBar) {
+        durationProgressElement.textContent = `${weeklyDurationMinutes}/${weeklyDurationGoalMinutes}分钟`;
+        durationProgressBar.style.width = durationProgress + '%';
+    }
+}
+
+// 创建训练趋势图表
+function createWorkoutTrendChart(data) {
+    const dates = data.map(d => d.date);
+    const calories = data.map(d => d.calories_burned || 0);
+    const durations = data.map(d => (d.duration || 0) / 60);
+    
+    const trace1 = {
+        x: dates,
+        y: calories,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: '卡路里消耗',
+        line: { color: '#007bff' },
+        yaxis: 'y'
+    };
+    
+    const trace2 = {
+        x: dates,
+        y: durations,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: '训练时长(分钟)',
+        line: { color: '#28a745' },
+        yaxis: 'y2'
+    };
+    
+    const layout = {
+        title: '',
+        xaxis: { title: '日期' },
+        yaxis: {
+            title: '卡路里',
+            side: 'left'
+        },
+        yaxis2: {
+            title: '时长(分钟)',
+            side: 'right',
+            overlaying: 'y'
+        },
+        legend: { x: 0, y: 1 },
+        margin: { t: 30, r: 50, b: 50, l: 50 }
+    };
+    
+    Plotly.newPlot('workoutTrendChart', [trace1, trace2], layout, {responsive: true});
+}
+
+// 创建运动类型分布图表
+function createExerciseTypeChart(data) {
+    const exerciseCount = {};
+    data.forEach(workout => {
+        const type = workout.exercise_type;
+        exerciseCount[type] = (exerciseCount[type] || 0) + 1;
+    });
+    
+    const labels = Object.keys(exerciseCount);
+    const values = Object.values(exerciseCount);
+    
+    const trace = {
+        labels: labels,
+        values: values,
+        type: 'pie',
+        hole: 0.4,
+        textinfo: 'label+percent',
+        textposition: 'outside'
+    };
+    
+    const layout = {
+        title: '',
+        margin: { t: 30, r: 30, b: 30, l: 30 },
+        showlegend: false
+    };
+    
+    Plotly.newPlot('exerciseTypeChart', [trace], layout, {responsive: true});
+}
+
+// 查看训练详情
+async function viewWorkoutDetail(workoutId) {
+    try {
+        const response = await fetch(`/api/workout_detail/${workoutId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            showWorkoutDetailModal(data.workout);
+        } else {
+            alert('获取训练详情失败：' + data.message);
+        }
+    } catch (error) {
+        console.error('获取训练详情失败:', error);
+        alert('网络错误，请稍后重试');
+    }
+}
+
+// 显示训练详情模态框
+function showWorkoutDetailModal(workout) {
+    const modalHtml = `
+        <div class="modal fade" id="workoutDetailModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-dumbbell"></i> 训练详情
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">基本信息</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted">运动类型</label>
+                                            <div class="fw-bold">${getExerciseName(workout.exercise_type)}</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted">训练时间</label>
+                                            <div class="fw-bold">${workout.formatted_date}</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted">训练时长</label>
+                                            <div class="fw-bold">${workout.formatted_duration}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">训练数据</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted">完成次数</label>
+                                            <div class="fw-bold text-primary">${workout.reps_completed} 次</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted">消耗卡路里</label>
+                                            <div class="fw-bold text-success">${workout.calories_burned} 卡</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted">动作准确率</label>
+                                            <div class="fw-bold text-warning">${workout.accuracy_score}%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">训练评价</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="training-evaluation">
+                                            ${generateTrainingEvaluation(workout)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                        <button type="button" class="btn btn-primary" onclick="shareWorkout(${workout.id})">
+                            <i class="fas fa-share"></i> 分享训练
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 移除已存在的模态框
+    const existingModal = document.getElementById('workoutDetailModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // 添加新的模态框
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // 显示模态框
+    const modal = new bootstrap.Modal(document.getElementById('workoutDetailModal'));
+    modal.show();
+}
+
+// 生成训练评价
+function generateTrainingEvaluation(workout) {
+    let evaluation = '';
+    const accuracy = workout.accuracy_score;
+    const reps = workout.reps_completed;
+    const duration = workout.duration;
+    
+    if (accuracy >= 90) {
+        evaluation += '<div class="alert alert-success"><i class="fas fa-star"></i> 动作标准度优秀！继续保持！</div>';
+    } else if (accuracy >= 70) {
+        evaluation += '<div class="alert alert-warning"><i class="fas fa-thumbs-up"></i> 动作标准度良好，还有提升空间。</div>';
+    } else {
+        evaluation += '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> 动作标准度需要改进，建议放慢速度，注意动作要领。</div>';
+    }
+    
+    if (duration >= 300) { // 5分钟以上
+        evaluation += '<div class="alert alert-info"><i class="fas fa-clock"></i> 训练时长充足，有助于提高耐力。</div>';
+    }
+    
+    if (reps >= 20) {
+        evaluation += '<div class="alert alert-success"><i class="fas fa-fire"></i> 训练强度很好，坚持下去！</div>';
+    }
+    
+    return evaluation || '<div class="text-muted">继续努力，每一次训练都是进步！</div>';
+}
+
+// 获取运动名称
+function getExerciseName(exerciseType) {
+    const names = {
+        'pushup': '俯卧撑',
+        'squat': '深蹲',
+        'situp': '仰卧起坐',
+        'plank': '平板支撑'
+    };
+    return names[exerciseType] || exerciseType;
+}
+
+// 分享训练
+async function shareWorkout(workoutId) {
+    try {
+        // 重新获取训练详情数据
+        const response = await fetch(`/api/workout_detail/${workoutId}`);
+        const data = await response.json();
+
+        if (!data.success) {
+            alert('获取训练数据失败：' + data.message);
+            return;
+        }
+
+        const workout = data.workout;
+
+        const shareText = `我刚完成了一次${workout.exercise_type}训练！\n` +
+                         `完成次数：${workout.reps_completed}次\n` +
+                         `训练时长：${workout.formatted_duration}\n` +
+                         `消耗卡路里：${workout.calories_burned}卡\n` +
+                         `动作准确率：${workout.accuracy_score}%\n` +
+                         `训练时间：${workout.formatted_date}\n` +
+                         `#智能健身 #AI训练`;
+
+        // 检查是否支持Web Share API
+        if (navigator.share) {
+            navigator.share({
+                title: '我的训练成果',
+                text: shareText,
+                url: window.location.origin
+            }).then(() => {
+                showMessage('分享成功！', 'success');
+            }).catch((error) => {
+                console.log('分享失败:', error);
+                fallbackShare(shareText);
+            });
+        } else {
+            fallbackShare(shareText);
+        }
+
+    } catch (error) {
+        console.error('分享训练失败:', error);
+        alert('分享失败，请稍后重试');
+    }
+}
+
+// 降级分享方案
+function fallbackShare(text) {
+    // 复制到剪贴板
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            showMessage('训练数据已复制到剪贴板，可以粘贴分享！', 'success');
+        }).catch(() => {
+            showShareModal(text);
+        });
+    } else {
+        showShareModal(text);
+    }
+}
+
+// 显示分享模态框
+function showShareModal(text) {
+    const modalHtml = `
+        <div class="modal fade" id="shareModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">分享训练成果</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>复制以下内容分享到社交媒体：</p>
+                        <textarea class="form-control" rows="6" readonly id="shareText">${text}</textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                        <button type="button" class="btn btn-primary" onclick="copyShareText()">复制文本</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 移除已存在的模态框
+    const existingModal = document.getElementById('shareModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // 添加新模态框
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // 显示模态框
+    const modal = new bootstrap.Modal(document.getElementById('shareModal'));
+    modal.show();
+}
+
+// 复制分享文本
+function copyShareText() {
+    const textarea = document.getElementById('shareText');
+    textarea.select();
+    document.execCommand('copy');
+    showMessage('已复制到剪贴板！', 'success');
+    
+    // 关闭模态框
+    const modal = bootstrap.Modal.getInstance(document.getElementById('shareModal'));
+    if (modal) {
+        modal.hide();
+    }
+}
+
+// 显示消息
+function showMessage(message, type = 'info') {
+    const alertClass = {
+        'success': 'alert-success',
+        'error': 'alert-danger',
+        'warning': 'alert-warning',
+        'info': 'alert-info'
+    }[type] || 'alert-info';
+    
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; max-width: 400px;" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+    
+    // 5秒后自动移除
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 5000);
+}
+</script>
+
+<!-- Plotly.js for charts - 使用最新版本 -->
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

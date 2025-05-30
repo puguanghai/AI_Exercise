@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}注册 - 智能健身指导系统{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="auth-card">
+                    <div class="auth-header text-center mb-4">
+                        <i class="fas fa-user-plus auth-icon"></i>
+                        <h2 class="fw-bold">创建账户</h2>
+                        <p class="text-muted">加入智能健身指导系统</p>
+                    </div>
+                    
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user me-2"></i>用户名
+                            </label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                            <div class="form-text">用户名长度为3-20个字符</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-2"></i>邮箱地址
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>密码
+                            </label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">
+                                    <i class="fas fa-eye" id="passwordToggle"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">密码长度至少6个字符</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">
+                                <i class="fas fa-lock me-2"></i>确认密码
+                            </label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmPassword')">
+                                    <i class="fas fa-eye" id="confirmPasswordToggle"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="agreeTerms" required>
+                            <label class="form-check-label" for="agreeTerms">
+                                我同意 <a href="#" class="text-primary">服务条款</a> 和 <a href="#" class="text-primary">隐私政策</a>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            <i class="fas fa-user-plus me-2"></i>注册账户
+                        </button>
+                    </form>
+                    
+                    <div class="text-center">
+                        <p class="mb-0">已有账户？ 
+                            <a href="{{ url_for('login') }}" class="text-primary text-decoration-none">
+                                立即登录
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 加载动画 -->
+<div class="loading-overlay" id="loadingOverlay" style="display: none;">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">注册中...</span>
+        </div>
+        <p class="mt-3">正在注册...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 注册表单处理
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    // 验证密码
+    if (password !== confirmPassword) {
+        showMessage('两次输入的密码不一致', 'error');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showMessage('密码长度至少6个字符', 'error');
+        return;
+    }
+    
+    const formData = {
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        password: password
+    };
+    
+    // 显示加载动画
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    
+    try {
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage('注册成功！正在跳转到登录页面...', 'success');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+        } else {
+            showMessage(result.message, 'error');
+        }
+    } catch (error) {
+        showMessage('注册失败，请稍后重试', 'error');
+    } finally {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+});
+
+// 切换密码显示
+function togglePassword(fieldId) {
+    const passwordInput = document.getElementById(fieldId);
+    const toggleIcon = document.getElementById(fieldId + 'Toggle');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.className = 'fas fa-eye-slash';
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.className = 'fas fa-eye';
+    }
+}
+
+// 实时密码验证
+document.getElementById('confirmPassword').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+    
+    if (confirmPassword && password !== confirmPassword) {
+        this.classList.add('is-invalid');
+    } else {
+        this.classList.remove('is-invalid');
+    }
+});
+
+// 显示消息
+function showMessage(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    const container = document.querySelector('.auth-card');
+    container.insertAdjacentHTML('afterbegin', alertHtml);
+    
+    // 自动移除消息
+    setTimeout(() => {
+        const alert = container.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

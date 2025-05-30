@@ -1,0 +1,1595 @@
+{% extends "base.html" %}
+
+{% block title %}智能健身训练{% endblock %}
+
+{% block body_class %}workout-page{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        overflow-y: auto !important;
+        height: auto !important;
+    }
+    
+    .workout-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        padding-top: 100px; /* 为固定导航栏留出空间 */
+        min-height: 100vh;
+    }
+    
+    .exercise-selection-card, .mode-selection-card {
+         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+         border-radius: 20px;
+         padding: 30px;
+         color: white;
+         box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+     }
+
+    .exercise-option {
+        background: white;
+        border-radius: 15px;
+        padding: 20px 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .exercise-option:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    .exercise-option.active {
+        background: #667eea;
+        color: white;
+        transform: translateY(-5px);
+    }
+
+    .exercise-icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        color: #667eea;
+    }
+
+    .exercise-option.active .exercise-icon {
+        color: white;
+    }
+
+    .exercise-option h5 {
+        margin-bottom: 10px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #333;
+        display: block !important;
+        visibility: visible !important;
+    }
+
+    .exercise-option p {
+        margin: 0;
+        opacity: 0.8;
+        font-size: 0.9rem;
+        color: #666;
+        display: block !important;
+        visibility: visible !important;
+        line-height: 1.4;
+    }
+    
+    .exercise-option.active h5 {
+        color: white;
+    }
+    
+    .exercise-option.active p {
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+
+    
+    .mode-option {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .mode-option:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-5px);
+    }
+    
+    .mode-option.active {
+        background: rgba(255, 255, 255, 0.25);
+        border-color: #fff;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .mode-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        color: #fff;
+    }
+    
+    .mode-option h5 {
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+    
+    .mode-option p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+    
+    .upload-card {
+        background: #fff;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .upload-area {
+        border: 3px dashed #ddd;
+        border-radius: 15px;
+        padding: 40px 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: #fafafa;
+    }
+    
+    .upload-area:hover, .upload-area.dragover {
+        border-color: #667eea;
+        background: #f0f4ff;
+    }
+    
+    .upload-icon {
+        font-size: 3rem;
+        color: #667eea;
+        margin-bottom: 15px;
+    }
+    
+    .upload-content h6 {
+        color: #333;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+    
+    .upload-progress {
+        margin-top: 20px;
+    }
+    
+    .video-controls-overlay {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 10px;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .video-progress {
+        flex: 1;
+    }
+    
+    .video-time {
+        color: white;
+        font-size: 0.9rem;
+        min-width: 100px;
+        text-align: right;
+    }
+    
+    .form-range {
+        background: transparent;
+    }
+    
+    .form-range::-webkit-slider-track {
+        background: rgba(255, 255, 255, 0.3);
+        height: 4px;
+        border-radius: 2px;
+    }
+    
+    .form-range::-webkit-slider-thumb {
+        background: #667eea;
+        border: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+    }
+    
+    .video-container {
+        position: relative;
+        background: #000;
+        border-radius: 10px;
+        overflow: hidden;
+        width: 100%;
+        height: 480px; /* 固定高度 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    #outputCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* 保持比例，完整显示 */
+        z-index: 2;
+    }
+    
+    #videoElement, #uploadedVideo {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* 保持比例，完整显示 */
+        z-index: 1;
+    }
+    
+    #videoElement {
+        transform: scaleX(-1); /* 镜像翻转摄像头画面 */
+    }
+    
+    /* 错误反馈样式 */
+    .error-feedback-container {
+        position: fixed;
+        top: 120px;
+        right: 20px;
+        max-width: 300px;
+        z-index: 1000;
+        background: rgba(255, 0, 0, 0.9);
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    .error-message {
+        color: white;
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 8px;
+        padding: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 5px;
+        border-left: 4px solid #fff;
+    }
+    
+    .error-message:last-child {
+        margin-bottom: 0;
+    }
+    
+    .error-message.severity-high {
+        background: rgba(255, 59, 59, 0.95);
+        border-left: 4px solid #ff0000;
+    }
+    
+    .error-message.severity-medium {
+        background: rgba(255, 165, 0, 0.9);
+        border-left: 4px solid #ffa500;
+    }
+    
+    .error-message.severity-low {
+        background: rgba(255, 193, 7, 0.9);
+        border-left: 4px solid #ffc107;
+    }
+    
+    .error-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .error-text {
+        font-weight: bold;
+    }
+    
+    .error-suggestion {
+        font-size: 12px;
+        opacity: 0.9;
+        font-style: italic;
+    }
+    
+    .score-good {
+        color: #28a745 !important;
+    }
+    
+    .score-medium {
+        color: #ffc107 !important;
+    }
+    
+    .score-poor {
+        color: #dc3545 !important;
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    /* 语音反馈控制按钮 */
+    .voice-control {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .voice-control:hover {
+        background: rgba(0, 0, 0, 0.9);
+        transform: scale(1.1);
+    }
+    
+    .voice-control.active {
+        background: #28a745;
+    }
+
+    /* 准确率详情样式 */
+    .accuracy-details-section {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .accuracy-info-container {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        border: 1px solid #e9ecef;
+    }
+
+    .accuracy-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .accuracy-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+
+    .accuracy-item:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .accuracy-item .label {
+        font-weight: 500;
+        color: #495057;
+        font-size: 0.9rem;
+    }
+
+    .accuracy-item .value {
+        font-weight: bold;
+        font-size: 1rem;
+        color: #667eea;
+    }
+
+    /* 根据准确率值设置颜色 */
+    .accuracy-item .value.high {
+        color: #28a745;
+    }
+
+    .accuracy-item .value.medium {
+        color: #ffc107;
+    }
+
+    .accuracy-item .value.low {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="workout-container">
+    <div class="container-fluid">
+        <!-- 页面标题 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="page-header">
+                    <h1 class="display-6 fw-bold">
+                        <i class="fas fa-play me-3"></i>智能训练
+                    </h1>
+                    <p class="lead text-muted">选择运动类型，开始您的AI指导训练</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 检测模式选择 -->
+        <div class="row mb-4" id="modeSelection">
+            <div class="col-12">
+                <div class="mode-selection-card">
+                    <h4 class="fw-bold mb-4">选择检测模式</h4>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="mode-option active" data-mode="camera" id="cameraMode">
+                                <div class="mode-icon">
+                                    <i class="fas fa-camera"></i>
+                                </div>
+                                <h5>实时摄像头</h5>
+                                <p>使用摄像头进行实时动作检测</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mode-option" data-mode="video" id="videoMode">
+                                <div class="mode-icon">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <h5>视频文件检测</h5>
+                                <p>上传视频文件进行动作分析</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 视频上传区域 -->
+        <div class="row mb-4" id="videoUploadSection" style="display: none;">
+            <div class="col-12">
+                <div class="upload-card">
+                    <h5 class="fw-bold mb-3">上传训练视频</h5>
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-content">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <h6>拖拽视频文件到此处或点击选择</h6>
+                            <p class="text-muted">支持 MP4, AVI, MOV 格式，最大 100MB</p>
+                            <input type="file" id="videoFileInput" accept="video/*" style="display: none;">
+                            <button class="btn btn-primary" onclick="document.getElementById('videoFileInput').click()">
+                                <i class="fas fa-folder-open me-2"></i>选择文件
+                            </button>
+                        </div>
+                    </div>
+                    <div class="upload-progress" id="uploadProgress" style="display: none;">
+                        <div class="progress">
+                            <div class="progress-bar" id="uploadProgressBar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted">上传进度: <span id="uploadProgressText">0%</span></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 运动选择 -->
+        <div class="row mb-4" id="exerciseSelection" style="display: none;">
+            <div class="col-12">
+                <div class="exercise-selection-card">
+                    <h4 class="fw-bold mb-4">选择运动类型</h4>
+                    <div class="row g-3">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="exercise-option" data-exercise="俯卧撑">
+                                <div class="exercise-icon">
+                                    <i class="fas fa-dumbbell"></i>
+                                </div>
+                                <h5>俯卧撑</h5>
+                                <p>锻炼胸肌、三头肌和核心</p>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3 col-md-6">
+                            <div class="exercise-option" data-exercise="深蹲">
+                                <div class="exercise-icon">
+                                    <i class="fas fa-running"></i>
+                                </div>
+                                <h5>深蹲</h5>
+                                <p>强化腿部和臀部肌肉</p>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3 col-md-6">
+                            <div class="exercise-option" data-exercise="仰卧起坐">
+                                <div class="exercise-icon">
+                                    <i class="fas fa-bed"></i>
+                                </div>
+                                <h5>仰卧起坐</h5>
+                                <p>增强腹部核心力量</p>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3 col-md-6">
+                            <div class="exercise-option" data-exercise="平板支撑">
+                                <div class="exercise-icon">
+                                    <i class="fas fa-stopwatch"></i>
+                                </div>
+                                <h5>平板支撑</h5>
+                                <p>全面锻炼核心稳定性</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="exercise-option" data-exercise="开合跳">
+                                <div class="exercise-icon">
+                                    <i class="fas fa-child"></i>
+                                </div>
+                                <h5>开合跳</h5>
+                                <p>全身有氧运动</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="exercise-option" data-exercise="弓步蹲">
+                                <div class="exercise-icon">
+                                    <i class="fas fa-walking"></i>
+                                </div>
+                                <h5>弓步蹲</h5>
+                                <p>腿部力量训练</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="exercise-option" data-exercise="波比跳">
+                                <div class="exercise-icon">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <h5>波比跳</h5>
+                                <p>高强度全身训练</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="exercise-option" data-exercise="引体向上">
+                                <div class="exercise-icon">
+                                    <i class="fas fa-grip-vertical"></i>
+                                </div>
+                                <h5>引体向上</h5>
+                                <p>悬挂拉起身体，锻炼背部和手臂</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 训练界面 -->
+        <div class="row" id="workoutInterface" style="display: none;">
+            <!-- 视频区域 -->
+            <div class="col-lg-8 mb-4">
+                <div class="video-card">
+                    <div class="video-header">
+                        <h5 class="fw-bold mb-0" id="currentExercise">俯卧撑训练</h5>
+                        <div class="video-controls">
+                            <button class="btn btn-success" id="startBtn" onclick="startWorkout()">
+                                <i class="fas fa-play me-2"></i>开始
+                            </button>
+                            <button class="btn btn-warning" id="pauseBtn" onclick="pauseWorkout()" style="display: none;">
+                                <i class="fas fa-pause me-2"></i>暂停
+                            </button>
+                            <button class="btn btn-danger" id="stopBtn" onclick="stopWorkout()" style="display: none;">
+                                <i class="fas fa-stop me-2"></i>结束
+                            </button>
+                            <button class="btn btn-info" id="reopenCameraBtn" onclick="reopenCamera()" style="display: none;">
+                                <i class="fas fa-camera me-2"></i>重新开启摄像头
+                            </button>
+                            <button class="btn btn-secondary" onclick="backToSelection()">
+                                <i class="fas fa-arrow-left me-2"></i>返回
+                            </button>
+                        </div>
+                    </div>
+                    <div class="video-body">
+                        <div class="video-container">
+                            <!-- 实时摄像头视频 -->
+                            <video id="videoElement" autoplay muted style="display: none;"></video>
+                            <!-- 上传的视频文件 -->
+                            <video id="uploadedVideo" controls style="display: none;"></video>
+                            <!-- 姿态检测画布 -->
+                            <canvas id="outputCanvas"></canvas>
+                            <button id="voiceToggle" class="voice-control" title="语音反馈开关">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                            <div class="video-overlay">
+                                <div class="pose-feedback" id="poseFeedback">
+                                    <div class="feedback-item">
+                                        <span class="feedback-label">姿势状态:</span>
+                                        <span class="feedback-value" id="poseStatus">准备中...</span>
+                                    </div>
+                                    <div class="feedback-item">
+                                        <span class="feedback-label">动作提示:</span>
+                                        <span class="feedback-value" id="actionTip">请选择检测模式</span>
+                                    </div>
+                                </div>
+                                <!-- 视频播放控制 -->
+                                <div class="video-controls-overlay" id="videoControlsOverlay" style="display: none;">
+                                    <button class="btn btn-sm btn-light" id="playPauseBtn" onclick="toggleVideoPlayback()">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-light" id="restartBtn" onclick="restartVideo()">
+                                        <i class="fas fa-redo"></i>
+                                    </button>
+                                    <div class="video-progress">
+                                        <input type="range" id="videoProgressSlider" min="0" max="100" value="0" class="form-range">
+                                    </div>
+                                    <span class="video-time" id="videoTime">00:00 / 00:00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 数据面板 -->
+            <div class="col-lg-4 mb-4">
+                <div class="stats-panel">
+                    <!-- 实时统计 -->
+                    <div class="stat-section">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-chart-bar me-2"></i>实时数据
+                        </h6>
+                        <div class="stat-grid">
+                            <div id="poseFeedback" class=
+                            <div class="stat-item">
+                                <div class="stat-icon bg-primary">
+                                    <i class="fas fa-repeat"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number" id="repCount">0</div>
+                                    <div class="stat-label">次数</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-item">
+                                <div class="stat-icon bg-success">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number" id="timeCount">00:00</div>
+                                    <div class="stat-label">时长</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-item">
+                                <div class="stat-icon bg-warning">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number" id="calorieCount">0</div>
+                                    <div class="stat-label">卡路里</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-item">
+                                <div class="stat-icon bg-info">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number" id="accuracyScore">0%</div>
+                                    <div class="stat-label">准确率</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-item">
+                                <div class="stat-icon bg-success">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number score-good" id="formScore">0%</div>
+                                    <div class="stat-label">形态评分</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-item">
+                                <div class="stat-icon bg-secondary">
+                                    <i class="fas fa-angle-double-up"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-number" id="angleIndicator">0°</div>
+                                    <div class="stat-label">运动角度</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 准确率详情显示 -->
+                        <div class="accuracy-details-section mt-4">
+                            <h6 class="fw-bold mb-3">
+                                <i class="fas fa-chart-line me-2"></i>准确率详情
+                            </h6>
+                            <div id="accuracyInfo" class="accuracy-info-container">
+                                <div class="accuracy-details">
+                                    <div class="accuracy-item">
+                                        <span class="label">总体准确率:</span>
+                                        <span class="value">0%</span>
+                                    </div>
+                                    <div class="accuracy-item">
+                                        <span class="label">实时准确率:</span>
+                                        <span class="value">0%</span>
+                                    </div>
+                                    <div class="accuracy-item">
+                                        <span class="label">正确帧数:</span>
+                                        <span class="value">0/0</span>
+                                    </div>
+                                    <div class="accuracy-item">
+                                        <span class="label">当前评分:</span>
+                                        <span class="value">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 实时错误反馈区域 -->
+                        <div id="error-feedback" class="error-feedback-container" style="display: none;">
+                            <!-- 错误信息将在这里动态显示 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 动作指导 -->
+                    <div class="guidance-section">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-lightbulb me-2"></i>动作指导
+                        </h6>
+                        <div class="guidance-content" id="guidanceContent">
+                            <div class="guidance-step">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <span>保持身体挺直</span>
+                            </div>
+                            <div class="guidance-step">
+                                <i class="fas fa-exclamation-circle text-warning"></i>
+                                <span>手臂角度需要调整</span>
+                            </div>
+                            <div class="guidance-step">
+                                <i class="fas fa-times-circle text-danger"></i>
+                                <span>动作幅度不够</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 训练目标 -->
+                    <div class="target-section">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-target me-2"></i>训练目标
+                        </h6>
+                        <div class="target-item">
+                            <label for="targetReps">目标次数:</label>
+                            <input type="number" id="targetReps" class="form-control" value="20" min="1" max="100">
+                        </div>
+                        <div class="target-item">
+                            <label for="targetTime">目标时长(分钟):</label>
+                            <input type="number" id="targetTime" class="form-control" value="5" min="1" max="60">
+                        </div>
+                        <div class="progress mt-3">
+                            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted">完成进度: <span id="progressText">0%</span></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 训练完成模态框 -->
+        <div class="modal fade" id="workoutCompleteModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-trophy me-2 text-warning"></i>训练完成！
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="workout-summary">
+                            <div class="row text-center">
+                                <div class="col-3">
+                                    <div class="summary-stat">
+                                        <div class="summary-number" id="finalReps">0</div>
+                                        <div class="summary-label">完成次数</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="summary-stat">
+                                        <div class="summary-number" id="finalTime">00:00</div>
+                                        <div class="summary-label">训练时长</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="summary-stat">
+                                        <div class="summary-number" id="finalCalories">0</div>
+                                        <div class="summary-label">消耗卡路里</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="summary-stat">
+                                        <div class="summary-number" id="finalAccuracy">0%</div>
+                                        <div class="summary-label">平均准确率</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="achievement-section mt-4">
+                                <h6 class="fw-bold">本次训练评价</h6>
+                                <div class="achievement-badge" id="achievementBadge">
+                                    <i class="fas fa-star"></i>
+                                    <span>表现优秀！</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                        <button type="button" class="btn btn-primary" onclick="startNewWorkout()">再来一次</button>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-success">查看数据</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- MediaPipe Pose Detection -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+
+<script src="{{ url_for('static', filename='js/pose-detection.js') }}"></script>
+<script>
+    let poseDetector;
+    let currentExercise = 'pushup';
+    let isDetecting = false;
+    let currentMode = 'camera'; // 'camera' 或 'video'
+    let uploadedVideoFile = null;
+    let workoutStartTime = null;
+    let workoutTimer = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        poseDetector = new PoseDetector();
+        
+        // 模式选择事件
+        document.querySelectorAll('.mode-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // 移除其他选项的active类
+                document.querySelectorAll('.mode-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                
+                // 添加active类到当前选项
+                this.classList.add('active');
+                
+                // 设置当前模式
+                currentMode = this.dataset.mode;
+                
+                // 显示对应的界面
+                if (currentMode === 'video') {
+                    document.getElementById('videoUploadSection').style.display = 'block';
+                    document.getElementById('exerciseSelection').style.display = 'none';
+                } else {
+                    document.getElementById('videoUploadSection').style.display = 'none';
+                    document.getElementById('exerciseSelection').style.display = 'block';
+                }
+            });
+        });
+        
+        // 运动选择事件
+        document.querySelectorAll('.exercise-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // 移除其他选项的active类
+                document.querySelectorAll('.exercise-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                
+                // 添加active类到当前选项
+                this.classList.add('active');
+                
+                // 设置当前运动类型
+                currentExercise = this.dataset.exercise;
+                
+                // 显示训练界面
+                document.getElementById('modeSelection').style.display = 'none';
+                document.getElementById('exerciseSelection').style.display = 'none';
+                document.getElementById('videoUploadSection').style.display = 'none';
+                document.getElementById('workoutInterface').style.display = 'block';
+                
+                // 更新当前运动显示
+                const exerciseNames = {
+                    'pushup': '俯卧撑训练',
+                    'squat': '深蹲训练',
+                    'situp': '仰卧起坐训练',
+                    'plank': '平板支撑训练',
+                    'jumping_jacks': '开合跳训练',
+                    'lunges': '弓步蹲训练',
+                    'burpees': '波比跳训练',
+                    'pull_ups': '引体向上训练'
+                };
+                document.getElementById('currentExercise').textContent = exerciseNames[currentExercise] || '训练';
+                
+                // 滚动到训练界面
+                document.getElementById('workoutInterface').scrollIntoView({ behavior: 'smooth' });
+                
+                // 根据模式初始化
+                if (currentMode === 'camera') {
+                    initializeCameraDetection();
+                } else {
+                    initializeVideoDetection();
+                }
+            });
+        });
+        
+        // 视频文件上传处理
+        setupVideoUpload();
+    });
+    
+    function setupVideoUpload() {
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('videoFileInput');
+        
+        // 拖拽上传
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleVideoFile(files[0]);
+            }
+        });
+        
+        // 文件选择
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                handleVideoFile(e.target.files[0]);
+            }
+        });
+    }
+    
+    function handleVideoFile(file) {
+        // 验证文件类型
+        if (!file.type.startsWith('video/')) {
+            alert('请选择视频文件！');
+            return;
+        }
+        
+        // 验证文件大小（100MB）
+        if (file.size > 100 * 1024 * 1024) {
+            alert('文件大小不能超过100MB！');
+            return;
+        }
+        
+        uploadedVideoFile = file;
+        
+        // 显示上传进度
+        document.getElementById('uploadProgress').style.display = 'block';
+        
+        // 模拟上传进度
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += 10;
+            document.getElementById('uploadProgressBar').style.width = progress + '%';
+            document.getElementById('uploadProgressText').textContent = progress + '%';
+            
+            if (progress >= 100) {
+                clearInterval(progressInterval);
+                setTimeout(() => {
+                    document.getElementById('uploadProgress').style.display = 'none';
+                    document.getElementById('exerciseSelection').style.display = 'block';
+                    
+                    // 创建视频URL
+                    const videoUrl = URL.createObjectURL(file);
+                    document.getElementById('uploadedVideo').src = videoUrl;
+                    
+                    alert('视频上传成功！请选择运动类型开始检测。');
+                }, 500);
+            }
+        }, 200);
+    }
+
+    async function initializeCameraDetection() {
+        try {
+            await poseDetector.loadPoseModel();
+            poseDetector.setCameraMode(); // 设置为摄像头模式
+            await poseDetector.setupCamera();
+            document.getElementById('videoElement').style.display = 'block';
+            document.getElementById('uploadedVideo').style.display = 'none';
+            document.getElementById('videoControlsOverlay').style.display = 'none';
+            document.getElementById('actionTip').textContent = '准备就绪，点击开始按钮开始训练';
+        } catch (error) {
+            console.error('初始化失败:', error);
+            document.getElementById('actionTip').textContent = '初始化失败，请检查摄像头权限';
+        }
+    }
+    
+    async function initializeVideoDetection() {
+        try {
+            await poseDetector.loadPoseModel();
+            poseDetector.setVideoMode(); // 设置为视频模式
+            
+            // 如果有上传的视频文件，设置给pose detector
+            if (uploadedVideoFile) {
+                await poseDetector.setupVideoFile(uploadedVideoFile);
+            }
+            
+            document.getElementById('videoElement').style.display = 'none';
+            document.getElementById('uploadedVideo').style.display = 'block';
+            document.getElementById('videoControlsOverlay').style.display = 'flex';
+            document.getElementById('actionTip').textContent = '视频已加载，点击播放开始检测';
+            
+            // 设置视频事件监听
+            setupVideoControls();
+        } catch (error) {
+            console.error('初始化失败:', error);
+            document.getElementById('actionTip').textContent = '初始化失败: ' + error.message;
+        }
+    }
+    
+    function setupVideoControls() {
+        const video = document.getElementById('uploadedVideo');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const progressSlider = document.getElementById('videoProgressSlider');
+        const timeDisplay = document.getElementById('videoTime');
+        
+        // 播放/暂停按钮
+        video.addEventListener('play', () => {
+            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            if (!isDetecting) {
+                startVideoDetection();
+            }
+        });
+        
+        video.addEventListener('pause', () => {
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            if (isDetecting) {
+                pauseWorkout();
+            }
+        });
+        
+        // 进度条更新
+        video.addEventListener('timeupdate', () => {
+            if (video.duration) {
+                const progress = (video.currentTime / video.duration) * 100;
+                progressSlider.value = progress;
+                
+                const currentMin = Math.floor(video.currentTime / 60);
+                const currentSec = Math.floor(video.currentTime % 60);
+                const totalMin = Math.floor(video.duration / 60);
+                const totalSec = Math.floor(video.duration % 60);
+                
+                timeDisplay.textContent = `${currentMin.toString().padStart(2, '0')}:${currentSec.toString().padStart(2, '0')} / ${totalMin.toString().padStart(2, '0')}:${totalSec.toString().padStart(2, '0')}`;
+            }
+        });
+        
+        // 进度条拖拽
+        progressSlider.addEventListener('input', () => {
+            if (video.duration) {
+                video.currentTime = (progressSlider.value / 100) * video.duration;
+            }
+        });
+        
+        // 视频播放结束事件
+        video.addEventListener('ended', () => {
+            console.log('视频播放结束');
+
+            if (isDetecting) {
+                stopWorkout();
+            }
+
+            // 重置按钮状态 - 确保按钮可用
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'none';
+
+            // 启用所有按钮
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = false;
+
+            // 显示重新选择视频按钮
+            const reloadBtn = document.createElement('button');
+            reloadBtn.className = 'btn btn-primary me-2';
+            reloadBtn.innerHTML = '<i class="fas fa-upload me-2"></i>重新选择视频';
+            reloadBtn.onclick = () => {
+                // 重新显示视频上传界面
+                document.getElementById('workoutInterface').style.display = 'none';
+                document.getElementById('videoUploadSection').style.display = 'block';
+                document.getElementById('exerciseSelection').style.display = 'none';
+                reloadBtn.remove();
+
+                // 清空当前视频
+                video.src = '';
+                uploadedVideoFile = null;
+
+                showMessage('请重新选择视频文件', 'info');
+            };
+
+            const controlsContainer = document.querySelector('.video-controls');
+            if (controlsContainer && !controlsContainer.querySelector('.btn-primary')) {
+                controlsContainer.appendChild(reloadBtn);
+            }
+
+            showMessage('视频播放完成！可以重新选择视频继续训练。', 'success');
+        });
+    }
+    
+    function toggleVideoPlayback() {
+        const video = document.getElementById('uploadedVideo');
+        if (video.paused) {
+            video.play();
+        } else {
+            video.pause();
+        }
+    }
+    
+    function restartVideo() {
+        const video = document.getElementById('uploadedVideo');
+        video.currentTime = 0;
+        if (isDetecting) {
+            poseDetector.reset();
+        }
+    }
+    
+    function startVideoDetection() {
+        if (!isDetecting) {
+            console.log('开始视频检测，运动类型:', currentExercise);
+            poseDetector.startDetection(currentExercise);
+            isDetecting = true;
+
+            // 更新按钮状态
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'inline-block';
+            document.getElementById('stopBtn').style.display = 'inline-block';
+
+            // 开始视频帧检测
+            detectVideoFrames();
+
+            showMessage('视频检测已开始', 'success');
+        }
+    }
+    
+    function detectVideoFrames() {
+        // 视频检测现在由pose detector内部的detectPose方法处理
+        // 这里只需要确保检测循环已经启动
+        console.log('视频检测已启动');
+    }
+
+    function startWorkout() {
+        if (currentMode === 'camera') {
+            if (!isDetecting) {
+                // 如果摄像头已经初始化，直接重新开始检测
+                if (poseDetector && poseDetector.video && poseDetector.video.srcObject) {
+                    poseDetector.isDetecting = true;
+                    poseDetector.startDetection(currentExercise);
+                } else {
+                    // 重新初始化摄像头
+                    initializeCameraDetection();
+                }
+                isDetecting = true;
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('pauseBtn').style.display = 'inline-block';
+                document.getElementById('stopBtn').style.display = 'inline-block';
+                showMessage('训练已开始', 'success');
+            }
+        } else {
+            // 视频模式下播放视频
+            const video = document.getElementById('uploadedVideo');
+            video.play();
+        }
+    }
+
+    function pauseWorkout() {
+        if (isDetecting) {
+            poseDetector.isDetecting = false; // 只停止检测，不关闭摄像头
+            isDetecting = false;
+
+            if (currentMode === 'camera') {
+                document.getElementById('startBtn').style.display = 'inline-block';
+                document.getElementById('pauseBtn').style.display = 'none';
+                showMessage('训练已暂停', 'info');
+            } else {
+                const video = document.getElementById('uploadedVideo');
+                video.pause();
+                showMessage('视频已暂停', 'info');
+            }
+        }
+    }
+
+    function stopWorkout() {
+        if (isDetecting || poseDetector.isDetecting) {
+            poseDetector.stopDetection();
+            isDetecting = false;
+
+            // 重置按钮状态
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'none';
+
+            // 确保按钮可用
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = false;
+
+            if (currentMode === 'video') {
+                const video = document.getElementById('uploadedVideo');
+                video.pause();
+                video.currentTime = 0;
+            }
+
+            showMessage('训练已停止', 'info');
+
+            // 显示训练总结
+            showWorkoutSummary();
+        }
+    }
+
+    function resetWorkout() {
+        // 停止当前训练
+        stopWorkout();
+
+        // 重置所有统计数据
+        if (poseDetector) {
+            poseDetector.exerciseCounter = 0;
+            poseDetector.accuracy = 0;
+            poseDetector.calories = 0;
+            poseDetector.frameCount = 0;
+            poseDetector.correctFrames = 0;
+            poseDetector.realTimeAccuracy = 0;
+            poseDetector.currentFormScore = 0;
+            poseDetector.accuracyHistory = [];
+            poseDetector.updateStats();
+        }
+
+        // 重置视频
+        if (currentMode === 'video') {
+            const video = document.getElementById('uploadedVideo');
+            video.currentTime = 0;
+        }
+
+        showMessage('训练已重置', 'info');
+    }
+
+    function showWorkoutSummary() {
+        if (poseDetector && poseDetector.exerciseCounter > 0) {
+            // 更新模态框数据
+            document.getElementById('finalReps').textContent = poseDetector.exerciseCounter;
+            document.getElementById('finalCalories').textContent = Math.round(poseDetector.calories);
+            document.getElementById('finalAccuracy').textContent = Math.round(poseDetector.accuracy) + '%';
+
+            // 计算训练时长
+            const duration = poseDetector.startTime ? Math.floor((Date.now() - poseDetector.startTime) / 1000) : 0;
+            const minutes = Math.floor(duration / 60);
+            const seconds = duration % 60;
+            document.getElementById('finalTime').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('workoutCompleteModal'));
+            modal.show();
+        }
+    }
+
+    function startNewWorkout() {
+        // 关闭模态框
+        const modal = bootstrap.Modal.getInstance(document.getElementById('workoutCompleteModal'));
+        if (modal) {
+            modal.hide();
+        }
+
+        // 重置训练
+        resetWorkout();
+    }
+
+    function showMessage(message, type = 'info') {
+        // 创建提示消息
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(alertDiv);
+
+        // 3秒后自动消失
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 3000);
+    }
+
+    // 添加键盘快捷键支持
+    document.addEventListener('keydown', function(e) {
+        if (e.target.tagName === 'INPUT') return; // 忽略输入框中的按键
+
+        switch(e.code) {
+            case 'Space':
+                e.preventDefault();
+                if (currentMode === 'video') {
+                    toggleVideoPlayback();
+                } else if (isDetecting) {
+                    pauseWorkout();
+                } else {
+                    startWorkout();
+                }
+                break;
+            case 'KeyR':
+                e.preventDefault();
+                if (currentMode === 'video') {
+                    restartVideo();
+                } else {
+                    resetWorkout();
+                }
+                break;
+            case 'KeyS':
+                e.preventDefault();
+                stopWorkout();
+                break;
+        }
+    });
+
+    function reopenCamera() {
+        if (currentMode === 'camera') {
+            // 重新初始化摄像头
+            initializeCameraDetection();
+            
+            // 恢复按钮状态
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'none';
+            document.getElementById('reopenCameraBtn').style.display = 'none';
+            
+            showMessage('摄像头已重新开启', 'success');
+        }
+    }
+
+    // 全局准确率更新函数 - 接收来自pose-detection.js的实时数据
+    window.updateWorkoutAccuracy = function(accuracyData) {
+        console.log('收到准确率更新数据:', accuracyData);
+
+        // 更新所有可能的准确率显示元素
+        const elements = {
+            accuracy: document.getElementById('accuracy'),
+            reps: document.getElementById('reps'),
+            time: document.getElementById('time'),
+            calories: document.getElementById('calories'),
+            repCount: document.getElementById('repCount'),
+            timeCount: document.getElementById('timeCount'),
+            calorieCount: document.getElementById('calorieCount'),
+            accuracyScore: document.getElementById('accuracyScore'),
+            formScore: document.getElementById('formScore'),
+            realTimeAccuracy: document.getElementById('realTimeAccuracy')
+        };
+
+        // 如果传入的是数字，转换为对象格式
+        if (typeof accuracyData === 'number') {
+            accuracyData = {
+                accuracy: accuracyData,
+                realTimeAccuracy: accuracyData,
+                formScore: accuracyData
+            };
+        }
+
+        // 更新准确率相关元素
+        if (elements.accuracy && accuracyData.accuracy !== undefined) {
+            elements.accuracy.textContent = `${Math.round(accuracyData.accuracy)}%`;
+        }
+        if (elements.accuracyScore && accuracyData.accuracy !== undefined) {
+            elements.accuracyScore.textContent = `${Math.round(accuracyData.accuracy)}%`;
+        }
+        if (elements.formScore && accuracyData.formScore !== undefined) {
+            elements.formScore.textContent = `${Math.round(accuracyData.formScore)}%`;
+        }
+        if (elements.realTimeAccuracy && accuracyData.realTimeAccuracy !== undefined) {
+            elements.realTimeAccuracy.textContent = `${Math.round(accuracyData.realTimeAccuracy)}%`;
+        }
+
+        // 更新其他统计数据
+        if (elements.reps && accuracyData.reps !== undefined) {
+            elements.reps.textContent = accuracyData.reps;
+        }
+        if (elements.repCount && accuracyData.reps !== undefined) {
+            elements.repCount.textContent = accuracyData.reps;
+        }
+        if (elements.calories && accuracyData.calories !== undefined) {
+            elements.calories.textContent = Math.round(accuracyData.calories);
+        }
+        if (elements.calorieCount && accuracyData.calories !== undefined) {
+            elements.calorieCount.textContent = Math.round(accuracyData.calories);
+        }
+
+        // 更新准确率详情面板
+        updateAccuracyDetailsPanel(accuracyData);
+
+        console.log('Workout页面准确率更新:', accuracyData);
+    };
+
+    // 更新准确率详情面板
+    function updateAccuracyDetailsPanel(accuracyData) {
+        const accuracyInfo = document.getElementById('accuracyInfo');
+        if (!accuracyInfo) return;
+
+        // 计算显示值
+        const totalAccuracy = Math.round(accuracyData.accuracy || 0);
+        const realTimeAcc = Math.round(accuracyData.realTimeAccuracy || 0);
+        const formScore = Math.round(accuracyData.formScore || 0);
+        const correctFrames = accuracyData.correctFrames || 0;
+        const frameCount = accuracyData.frameCount || 0;
+
+        // 获取准确率颜色类
+        function getAccuracyClass(score) {
+            if (score >= 80) return 'text-success';
+            if (score >= 60) return 'text-warning';
+            return 'text-danger';
+        }
+
+        // 更新面板内容
+        accuracyInfo.innerHTML = `
+            <div class="accuracy-details">
+                <div class="accuracy-item">
+                    <span class="label">总体准确率:</span>
+                    <span class="value ${getAccuracyClass(totalAccuracy)}">${totalAccuracy}%</span>
+                </div>
+                <div class="accuracy-item">
+                    <span class="label">实时准确率:</span>
+                    <span class="value ${getAccuracyClass(realTimeAcc)}">${realTimeAcc}%</span>
+                </div>
+                <div class="accuracy-item">
+                    <span class="label">正确帧数:</span>
+                    <span class="value">${correctFrames}/${frameCount}</span>
+                </div>
+                <div class="accuracy-item">
+                    <span class="label">当前评分:</span>
+                    <span class="value ${getAccuracyClass(formScore)}">${formScore}%</span>
+                </div>
+            </div>
+        `;
+
+        console.log('准确率详情面板已更新:', {totalAccuracy, realTimeAcc, formScore, correctFrames, frameCount});
+    }
+
+    // 创建workout管理器实例供pose-detection.js调用
+    window.workoutManager = {
+        updateAccuracyFromDetector: function(accuracy) {
+            window.updateWorkoutAccuracy({
+                accuracy: accuracy,
+                realTimeAccuracy: accuracy,
+                formScore: accuracy
+            });
+        }
+    };
+
+    function backToSelection() {
+        if (isDetecting) {
+            poseDetector.stopDetection();
+            isDetecting = false;
+        }
+
+        if (currentMode === 'video') {
+            const video = document.getElementById('uploadedVideo');
+            video.pause();
+            video.currentTime = 0;
+        }
+
+        // 隐藏训练界面，显示模式选择界面
+        document.getElementById('workoutInterface').style.display = 'none';
+        document.getElementById('modeSelection').style.display = 'block';
+        document.getElementById('exerciseSelection').style.display = 'none';
+        document.getElementById('videoUploadSection').style.display = 'none';
+
+        // 重置按钮状态
+        document.getElementById('startBtn').style.display = 'inline-block';
+        document.getElementById('pauseBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'none';
+        document.getElementById('reopenCameraBtn').style.display = 'none';
+
+        // 重置检测器
+        if (poseDetector && typeof poseDetector.reset === 'function') {
+            poseDetector.reset();
+        }
+
+        // 重置统计数据
+        document.getElementById('repCount').textContent = '0';
+        document.getElementById('timeCount').textContent = '00:00';
+        document.getElementById('calorieCount').textContent = '0';
+        document.getElementById('accuracyScore').textContent = '0%';
+        document.getElementById('angleIndicator').textContent = '0°';
+
+        showMessage('已返回选择界面', 'info');
+    }
+
+    function showWorkoutComplete(data) {
+        document.getElementById('finalReps').textContent = data.reps;
+        document.getElementById('finalTime').textContent = Math.floor(data.duration / 60) + ':' + 
+            String(data.duration % 60).padStart(2, '0');
+        document.getElementById('finalCalories').textContent = data.calories.toFixed(1);
+        document.getElementById('finalAccuracy').textContent = data.accuracy.toFixed(1) + '%';
+        
+        // 保存训练数据到数据库
+        saveWorkoutToDatabase(data);
+        
+        const modal = new bootstrap.Modal(document.getElementById('workoutCompleteModal'));
+        modal.show();
+    }
+    
+    // 保存训练数据到数据库
+    async function saveWorkoutToDatabase(data) {
+        try {
+            const workoutData = {
+                exercise_type: currentExercise,
+                duration: data.duration,
+                reps: data.reps,
+                calories: data.calories,
+                accuracy: data.accuracy,
+                date: new Date().toISOString().split('T')[0]
+            };
+            
+            const response = await fetch('/api/save_workout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(workoutData)
+            });
+            
+            if (response.ok) {
+                console.log('训练数据保存成功');
+            } else {
+                console.error('保存训练数据失败');
+            }
+        } catch (error) {
+            console.error('保存训练数据时出错:', error);
+        }
+    }
+
+
+
+    function startNewWorkout() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('workoutCompleteModal'));
+        modal.hide();
+        
+        // 重置检测器
+        poseDetector.reset();
+        
+        // 重新开始
+        startWorkout();
+    }
+
+    function viewWorkoutData() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('workoutCompleteModal'));
+        modal.hide();
+        
+        // 跳转到数据页面
+        window.location.href = '/dashboard';
+    }
+</script>
+{% endblock %}
