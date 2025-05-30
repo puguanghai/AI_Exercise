@@ -1,0 +1,36 @@
+# Render部署配置文件
+# AI智能健身指导系统 - Render.com 部署配置
+
+services:
+  - type: web
+    name: ai-fitness-guidance
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:///instance/fitness_app.db
+      - key: ADMIN_USERNAME
+        value: 小明
+      - key: ADMIN_EMAIL
+        value: admin@fitness.com
+      - key: ADMIN_PASSWORD
+        value: 123456
+      - key: ADMIN_DISPLAY_NAME
+        value: 系统管理员
+      - key: FLASK_HOST
+        value: 0.0.0.0
+      - key: FLASK_PORT
+        value: 10000
+    healthCheckPath: /
+    disk:
+      name: fitness-data
+      mountPath: /opt/render/project/src/instance
+      sizeGB: 1
